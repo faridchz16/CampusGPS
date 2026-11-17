@@ -1,11 +1,15 @@
 package com.chavez.campusgps.ui
 
 import android.annotation.SuppressLint
+import android.util.Log
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import com.chavez.campusgps.R
 import com.chavez.campusgps.model.Lugar
 import com.chavez.campusgps.model.LugarConDistancia
 import com.chavez.campusgps.model.UbicacionUi
@@ -13,6 +17,7 @@ import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.MapStyleOptions
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MapUiSettings
@@ -30,12 +35,31 @@ fun MapaUbicacion(
     tienePermisoUbicacion: Boolean,
     modifier: Modifier = Modifier
 ) {
+    val contexto = LocalContext.current
+    val esOscuro = isSystemInDarkTheme()
+
     val camara = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(LatLng(-12.0464, -77.0428), 12f)
     }
 
-    val propiedades = remember(tienePermisoUbicacion) {
-        MapProperties(isMyLocationEnabled = tienePermisoUbicacion)
+    val estiloMapa = remember(esOscuro) {
+        if (esOscuro) {
+            runCatching {
+                MapStyleOptions.loadRawResourceStyle(contexto, R.raw.mapa_oscuro)
+            }.getOrElse { error ->
+                Log.e("MapaUbicacion", "No se pudo cargar el estilo oscuro del mapa", error)
+                null
+            }
+        } else {
+            null
+        }
+    }
+
+    val propiedades = remember(tienePermisoUbicacion, estiloMapa) {
+        MapProperties(
+            isMyLocationEnabled = tienePermisoUbicacion,
+            mapStyleOptions = estiloMapa
+        )
     }
 
     val configuracionUi = remember(tienePermisoUbicacion) {
