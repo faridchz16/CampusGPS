@@ -57,12 +57,14 @@ import com.chavez.campusgps.viewmodel.MapaViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PantallaMapa(vm: MapaViewModel) {
+    // La pantalla solo LEE los estados del ViewModel
     val estado by vm.estado.collectAsState()
     val lugares by vm.lugares.collectAsState()
     val seleccionado by vm.seleccionado.collectAsState()
     val masCercano by vm.masCercano.collectAsState()
     val categoria by vm.categoria.collectAsState()
     val radio by vm.radio.collectAsState()
+    val ultimoVisitado by vm.ultimoVisitado.collectAsState()
 
     val contexto = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -247,6 +249,19 @@ fun PantallaMapa(vm: MapaViewModel) {
                             if (metros != null) append(" (${formatearDistancia(metros)})")
                         },
                         style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+
+                ultimoVisitado?.let { ultimo ->
+                    Text(
+                        text = buildAnnotatedString {
+                            withStyle(SpanStyle(fontWeight = FontWeight.Bold)) {
+                                append("Último visitado: ")
+                            }
+                            append(ultimo.nombre)
+                        },
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
 

@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.chavez.campusgps.data.LugaresRepository
 import com.chavez.campusgps.data.UbicacionNoDisponibleException
 import com.chavez.campusgps.data.UbicacionRepository
+import com.chavez.campusgps.data.UltimoLugarRepository
 import com.chavez.campusgps.model.Lugar
 import com.chavez.campusgps.model.LugarConDistancia
 import com.chavez.campusgps.model.Posicion
@@ -24,7 +25,8 @@ import kotlinx.coroutines.launch
 
 class MapaViewModel(
     private val ubicacionRepo: UbicacionRepository,
-    private val lugaresRepo: LugaresRepository
+    private val lugaresRepo: LugaresRepository,
+    private val ultimoLugarRepo: UltimoLugarRepository
 ) : ViewModel() {
 
     private val _estado = MutableStateFlow<UbicacionUi>(UbicacionUi.Inicial)
@@ -61,7 +63,15 @@ class MapaViewModel(
         .map { lista -> lista.firstOrNull { it.metros != null }?.lugar }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
+    val ultimoVisitado: StateFlow<Lugar?> = ultimoLugarRepo.ultimoLugarId
+        .map { id ->
+            if (id == null) null
+            else lugaresRepo.obtenerLugares().firstOrNull { it.id == id }
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
     fun buscar() {
+        // Paso 8: antes de buscar, comprobar Google Play Services (sin Context: lo pregunta al Repository)
         if (!ubicacionRepo.playServicesDisponible()) {
             _estado.value = UbicacionUi.Error(
                 "Este dispositivo no tiene Google Play Services",
@@ -91,6 +101,11 @@ class MapaViewModel(
 
     fun seleccionar(id: Int?) {
         _seleccionado.value = id
+        if (id != null) {
+            viewModelScope.launch {
+                ultimoLugarRepo.guardarUltimoLugarId(id)
+            }
+        }
     }
 
     fun elegirCategoria(nueva: String?) {
@@ -105,6 +120,7 @@ class MapaViewModel(
             }
         }
     }
+
     fun elegirRadio(nuevoRadio: Int) {
         _radio.value = nuevoRadio
     }
