@@ -1,5 +1,7 @@
 package com.chavez.campusgps.ui
 
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -30,16 +32,25 @@ import com.chavez.campusgps.model.LugarConDistancia
 import com.chavez.campusgps.util.formatearDistancia
 
 private val AzulLugar = Color(0xFF1E88E5)
+private val VerdeCercano = Color(0xFF2E9E4F)
 
 @Composable
 fun ListaLugares(
     lugares: List<LugarConDistancia>,
     seleccionado: Int?,
+    masCercanoId: Int?,
     onClick: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val estadoLista = rememberLazyListState()
+
+    LaunchedEffect(lugares) {
+        estadoLista.scrollToItem(0)
+    }
+
     LazyColumn(
         modifier = modifier,
+        state = estadoLista,
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
@@ -47,6 +58,7 @@ fun ListaLugares(
             TarjetaLugar(
                 item = item,
                 esSeleccionado = item.lugar.id == seleccionado,
+                esMasCercano = item.lugar.id == masCercanoId,
                 onClick = { onClick(item.lugar.id) }
             )
         }
@@ -57,6 +69,7 @@ fun ListaLugares(
 private fun TarjetaLugar(
     item: LugarConDistancia,
     esSeleccionado: Boolean,
+    esMasCercano: Boolean,
     onClick: () -> Unit
 ) {
     val colores = MaterialTheme.colorScheme
@@ -80,7 +93,7 @@ private fun TarjetaLugar(
                 modifier = Modifier
                     .size(10.dp)
                     .clip(CircleShape)
-                    .background(AzulLugar)
+                    .background(if (esMasCercano) VerdeCercano else AzulLugar)
             )
 
             Spacer(Modifier.width(12.dp))

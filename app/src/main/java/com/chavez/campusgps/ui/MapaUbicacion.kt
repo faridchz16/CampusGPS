@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.key
 import androidx.compose.ui.Modifier
+import com.chavez.campusgps.model.Lugar
 import com.chavez.campusgps.model.LugarConDistancia
 import com.chavez.campusgps.model.UbicacionUi
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -20,6 +21,7 @@ fun MapaUbicacion(
     estado: UbicacionUi,
     lugares: List<LugarConDistancia>,
     seleccionado: Int?,
+    masCercano: Lugar?,
     modifier: Modifier = Modifier
 ) {
     val camara = rememberCameraPositionState {
@@ -61,11 +63,17 @@ fun MapaUbicacion(
                     position = LatLng(item.lugar.latitud, item.lugar.longitud)
                 )
 
+                val color = if (item.lugar.id == masCercano?.id) {
+                    BitmapDescriptorFactory.HUE_GREEN
+                } else {
+                    BitmapDescriptorFactory.HUE_AZURE
+                }
+
                 Marker(
                     state = estadoMarcador,
                     title = item.lugar.nombre,
                     snippet = item.lugar.categoria,
-                    icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)
+                    icon = BitmapDescriptorFactory.defaultMarker(color)
                 )
 
                 LaunchedEffect(seleccionado) {
