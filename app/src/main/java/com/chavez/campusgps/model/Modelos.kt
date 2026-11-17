@@ -10,7 +10,11 @@ data class Lugar(
     val longitud: Double
 )
 
-data class LugarConDistancia(val lugar: Lugar, val metros: Float?)
+data class LugarConDistancia(
+    val lugar: Lugar,
+    val metros: Float?,
+    val estaEnRadio: Boolean = false
+)
 
 enum class TipoError { SIN_PERMISO, GPS_APAGADO, SIN_PLAY_SERVICES, OTRO }
 

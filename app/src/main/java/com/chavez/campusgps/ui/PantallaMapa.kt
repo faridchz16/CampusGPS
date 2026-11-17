@@ -25,6 +25,9 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -59,6 +62,7 @@ fun PantallaMapa(vm: MapaViewModel) {
     val seleccionado by vm.seleccionado.collectAsState()
     val masCercano by vm.masCercano.collectAsState()
     val categoria by vm.categoria.collectAsState()
+    val radio by vm.radio.collectAsState()
 
     val contexto = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -165,6 +169,7 @@ fun PantallaMapa(vm: MapaViewModel) {
                 lugares = lugares,
                 seleccionado = seleccionado,
                 masCercano = masCercano,
+                radio = radio,
                 tienePermisoUbicacion = tienePermisoUbicacion,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -173,7 +178,7 @@ fun PantallaMapa(vm: MapaViewModel) {
 
             LazyRow(
                 modifier = Modifier.fillMaxWidth(),
-                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 item {
@@ -189,6 +194,25 @@ fun PantallaMapa(vm: MapaViewModel) {
                         onClick = { vm.elegirCategoria(cat) },
                         label = { Text(cat) }
                     )
+                }
+            }
+
+            SingleChoiceSegmentedButtonRow(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 4.dp)
+            ) {
+                vm.radiosDisponibles.forEachIndexed { indice, r ->
+                    SegmentedButton(
+                        selected = r == radio,
+                        onClick = { vm.elegirRadio(r) },
+                        shape = SegmentedButtonDefaults.itemShape(
+                            index = indice,
+                            count = vm.radiosDisponibles.size
+                        )
+                    ) {
+                        Text("$r m")
+                    }
                 }
             }
 
@@ -248,6 +272,7 @@ fun PantallaMapa(vm: MapaViewModel) {
                 lugares = lugares,
                 seleccionado = seleccionado,
                 masCercanoId = masCercano?.id,
+                radio = radio,
                 onClick = { id -> vm.seleccionar(id) },
                 modifier = Modifier
                     .fillMaxWidth()

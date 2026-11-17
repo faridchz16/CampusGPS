@@ -3,6 +3,7 @@ package com.chavez.campusgps.ui
 import android.annotation.SuppressLint
 import android.util.Log
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.key
@@ -18,6 +19,7 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MapStyleOptions
+import com.google.maps.android.compose.Circle
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MapUiSettings
@@ -32,11 +34,14 @@ fun MapaUbicacion(
     lugares: List<LugarConDistancia>,
     seleccionado: Int?,
     masCercano: Lugar?,
+    radio: Int,
     tienePermisoUbicacion: Boolean,
     modifier: Modifier = Modifier
 ) {
     val contexto = LocalContext.current
     val esOscuro = isSystemInDarkTheme()
+
+    val colorRadio = MaterialTheme.colorScheme.primary
 
     val camara = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(LatLng(-12.0464, -77.0428), 12f)
@@ -89,10 +94,18 @@ fun MapaUbicacion(
         uiSettings = configuracionUi
     ) {
         if (estado is UbicacionUi.Lista) {
+            val centro = LatLng(estado.posicion.latitud, estado.posicion.longitud)
+
+            Circle(
+                center = centro,
+                radius = radio.toDouble(),
+                strokeColor = colorRadio,
+                strokeWidth = 3f,
+                fillColor = colorRadio.copy(alpha = 0.2f)
+            )
+
             Marker(
-                state = rememberUpdatedMarkerState(
-                    position = LatLng(estado.posicion.latitud, estado.posicion.longitud)
-                ),
+                state = rememberUpdatedMarkerState(position = centro),
                 title = "Estás aquí"
             )
         }

@@ -1,7 +1,5 @@
 package com.chavez.campusgps.ui
 
-import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -16,12 +14,15 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -39,6 +40,7 @@ fun ListaLugares(
     lugares: List<LugarConDistancia>,
     seleccionado: Int?,
     masCercanoId: Int?,
+    radio: Int,
     onClick: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -59,6 +61,7 @@ fun ListaLugares(
                 item = item,
                 esSeleccionado = item.lugar.id == seleccionado,
                 esMasCercano = item.lugar.id == masCercanoId,
+                radio = radio,
                 onClick = { onClick(item.lugar.id) }
             )
         }
@@ -70,6 +73,7 @@ private fun TarjetaLugar(
     item: LugarConDistancia,
     esSeleccionado: Boolean,
     esMasCercano: Boolean,
+    radio: Int,
     onClick: () -> Unit
 ) {
     val colores = MaterialTheme.colorScheme
@@ -104,11 +108,27 @@ private fun TarjetaLugar(
                     fontWeight = FontWeight.Bold,
                     style = MaterialTheme.typography.bodyLarge
                 )
-                Text(
-                    text = item.lugar.categoria,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = colores.onSurfaceVariant
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = item.lugar.categoria,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = colores.onSurfaceVariant
+                    )
+
+                    if (item.estaEnRadio) {
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            text = "Dentro de $radio m",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = colores.onSecondaryContainer,
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(50))
+                                .background(colores.secondaryContainer)
+                                .padding(horizontal = 8.dp, vertical = 2.dp)
+                        )
+                    }
+                }
             }
 
             Text(
