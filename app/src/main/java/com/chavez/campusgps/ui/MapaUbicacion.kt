@@ -1,8 +1,10 @@
 package com.chavez.campusgps.ui
 
+import android.annotation.SuppressLint
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.key
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import com.chavez.campusgps.model.Lugar
 import com.chavez.campusgps.model.LugarConDistancia
@@ -12,20 +14,32 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.GoogleMap
+import com.google.maps.android.compose.MapProperties
+import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.rememberUpdatedMarkerState
 
+@SuppressLint("MissingPermission")
 @Composable
 fun MapaUbicacion(
     estado: UbicacionUi,
     lugares: List<LugarConDistancia>,
     seleccionado: Int?,
     masCercano: Lugar?,
+    tienePermisoUbicacion: Boolean,
     modifier: Modifier = Modifier
 ) {
     val camara = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(LatLng(-12.0464, -77.0428), 12f)
+    }
+
+    val propiedades = remember(tienePermisoUbicacion) {
+        MapProperties(isMyLocationEnabled = tienePermisoUbicacion)
+    }
+
+    val configuracionUi = remember(tienePermisoUbicacion) {
+        MapUiSettings(myLocationButtonEnabled = tienePermisoUbicacion)
     }
 
     LaunchedEffect(estado) {
@@ -46,7 +60,9 @@ fun MapaUbicacion(
 
     GoogleMap(
         modifier = modifier,
-        cameraPositionState = camara
+        cameraPositionState = camara,
+        properties = propiedades,
+        uiSettings = configuracionUi
     ) {
         if (estado is UbicacionUi.Lista) {
             Marker(
