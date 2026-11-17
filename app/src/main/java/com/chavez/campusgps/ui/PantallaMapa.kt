@@ -1,7 +1,10 @@
 package com.chavez.campusgps.ui
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
+import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Column
@@ -29,7 +32,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
@@ -78,6 +80,14 @@ fun PantallaMapa(vm: MapaViewModel) {
         }
     }
 
+    fun abrirAjustes() {
+        val intent = Intent(
+            Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+            Uri.fromParts("package", contexto.packageName, null)
+        )
+        contexto.startActivity(intent)
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -89,6 +99,31 @@ fun PantallaMapa(vm: MapaViewModel) {
             )
         }
     ) { padding ->
+
+        val error = estado as? UbicacionUi.Error
+        if (error != null) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .padding(horizontal = 24.dp, vertical = 16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Button(onClick = { alPulsar() }) {
+                    Text("Obtener mi ubicación")
+                }
+
+                Spacer(Modifier.height(16.dp))
+
+                MensajeError(
+                    error = error,
+                    onAbrirAjustes = { abrirAjustes() },
+                    onReintentar = { alPulsar() }
+                )
+            }
+            return@Scaffold
+        }
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -153,11 +188,7 @@ fun PantallaMapa(vm: MapaViewModel) {
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         style = MaterialTheme.typography.bodySmall
                     )
-                    is UbicacionUi.Error -> Text(
-                        e.mensaje,
-                        color = MaterialTheme.colorScheme.error,
-                        textAlign = TextAlign.Center
-                    )
+                    is UbicacionUi.Error -> Unit
                 }
             }
 
