@@ -6,8 +6,11 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import com.chavez.campusgps.R
@@ -35,6 +38,7 @@ fun MapaUbicacion(
     seleccionado: Int?,
     masCercano: Lugar?,
     radio: Int,
+    siguiendo: Boolean,
     tienePermisoUbicacion: Boolean,
     modifier: Modifier = Modifier
 ) {
@@ -71,10 +75,19 @@ fun MapaUbicacion(
         MapUiSettings(myLocationButtonEnabled = tienePermisoUbicacion)
     }
 
+    var yaAnimadoInicial by remember { mutableStateOf(false) }
+
     LaunchedEffect(estado) {
         if (estado is UbicacionUi.Lista) {
             val destino = LatLng(estado.posicion.latitud, estado.posicion.longitud)
-            camara.animate(CameraUpdateFactory.newLatLngZoom(destino, 16f))
+            if (!yaAnimadoInicial) {
+                camara.animate(CameraUpdateFactory.newLatLngZoom(destino, 16f))
+                yaAnimadoInicial = true
+            } else if (siguiendo) {
+                camara.animate(CameraUpdateFactory.newLatLng(destino))
+            }
+        } else {
+            yaAnimadoInicial = false
         }
     }
 

@@ -10,15 +10,18 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -57,8 +60,8 @@ import com.chavez.campusgps.viewmodel.MapaViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PantallaMapa(vm: MapaViewModel) {
-    // La pantalla solo LEE los estados del ViewModel
     val estado by vm.estado.collectAsState()
+    val siguiendo by vm.siguiendo.collectAsState()
     val lugares by vm.lugares.collectAsState()
     val seleccionado by vm.seleccionado.collectAsState()
     val masCercano by vm.masCercano.collectAsState()
@@ -81,6 +84,8 @@ fun PantallaMapa(vm: MapaViewModel) {
 
     var tienePermisoUbicacion by remember { mutableStateOf(verificarPermiso()) }
 
+    var seguirTrasPermiso by remember { mutableStateOf(false) }
+
     DisposableEffect(lifecycleOwner) {
         val observador = LifecycleEventObserver { _, evento ->
             if (evento == Lifecycle.Event.ON_RESUME) {
@@ -97,22 +102,39 @@ fun PantallaMapa(vm: MapaViewModel) {
         val concedido = resultado.values.any { it }
         tienePermisoUbicacion = concedido
         if (concedido) {
-            vm.buscar()
+            if (seguirTrasPermiso) vm.iniciarSeguimiento() else vm.buscar()
         } else {
             vm.permisoDenegado()
         }
+        seguirTrasPermiso = false
+    }
+
+    fun pedirPermiso() {
+        lanzador.launch(
+            arrayOf(
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            )
+        )
     }
 
     fun alPulsar() {
         if (verificarPermiso()) {
             vm.buscar()
         } else {
-            lanzador.launch(
-                arrayOf(
-                    Manifest.permission.ACCESS_FINE_LOCATION,
-                    Manifest.permission.ACCESS_COARSE_LOCATION
-                )
-            )
+            seguirTrasPermiso = false
+            pedirPermiso()
+        }
+    }
+
+    fun alPulsarSeguimiento() {
+        if (siguiendo) {
+            vm.detenerSeguimiento()
+        } else if (verificarPermiso()) {
+            vm.iniciarSeguimiento()
+        } else {
+            seguirTrasPermiso = true
+            pedirPermiso()
         }
     }
 
@@ -172,6 +194,7 @@ fun PantallaMapa(vm: MapaViewModel) {
                 seleccionado = seleccionado,
                 masCercano = masCercano,
                 radio = radio,
+                siguiendo = siguiendo,
                 tienePermisoUbicacion = tienePermisoUbicacion,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -224,11 +247,29 @@ fun PantallaMapa(vm: MapaViewModel) {
                     .padding(start = 16.dp, end = 16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Button(
-                    onClick = { alPulsar() },
-                    enabled = estado !is UbicacionUi.Buscando
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center
                 ) {
-                    Text("Obtener mi ubicación")
+                    Button(
+                        onClick = { alPulsar() },
+                        enabled = estado !is UbicacionUi.Buscando
+                    ) {
+                        Text("Obtener mi ubicación")
+                    }
+
+                    Spacer(Modifier.width(8.dp))
+
+                    Button(
+                        onClick = { alPulsarSeguimiento() },
+                        colors = if (siguiendo) {
+                            ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                        } else {
+                            ButtonDefaults.buttonColors()
+                        }
+                    ) {
+                        Text(if (siguiendo) "Detener" else "Seguimiento")
+                    }
                 }
 
                 OutlinedButton(
