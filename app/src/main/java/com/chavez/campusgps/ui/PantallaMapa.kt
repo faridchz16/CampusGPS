@@ -7,16 +7,21 @@ import android.net.Uri
 import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
@@ -53,6 +58,7 @@ fun PantallaMapa(vm: MapaViewModel) {
     val lugares by vm.lugares.collectAsState()
     val seleccionado by vm.seleccionado.collectAsState()
     val masCercano by vm.masCercano.collectAsState()
+    val categoria by vm.categoria.collectAsState()
 
     val contexto = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -78,6 +84,7 @@ fun PantallaMapa(vm: MapaViewModel) {
         lifecycleOwner.lifecycle.addObserver(observador)
         onDispose { lifecycleOwner.lifecycle.removeObserver(observador) }
     }
+
     val lanzador = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { resultado ->
@@ -89,6 +96,7 @@ fun PantallaMapa(vm: MapaViewModel) {
             vm.permisoDenegado()
         }
     }
+
     fun alPulsar() {
         if (verificarPermiso()) {
             vm.buscar()
@@ -163,10 +171,31 @@ fun PantallaMapa(vm: MapaViewModel) {
                     .weight(1f)
             )
 
+            LazyRow(
+                modifier = Modifier.fillMaxWidth(),
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                item {
+                    FilterChip(
+                        selected = categoria == null,
+                        onClick = { vm.elegirCategoria(null) },
+                        label = { Text("Todos") }
+                    )
+                }
+                items(vm.categorias) { cat ->
+                    FilterChip(
+                        selected = categoria == cat,
+                        onClick = { vm.elegirCategoria(cat) },
+                        label = { Text(cat) }
+                    )
+                }
+            }
+
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 12.dp, start = 16.dp, end = 16.dp),
+                    .padding(start = 16.dp, end = 16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Button(
